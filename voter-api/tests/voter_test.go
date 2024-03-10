@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/adllev/voter-api/db"
+	"github.com/adllev/Voter-Container/voter-api/db"
 	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
 )
@@ -68,7 +68,6 @@ func Test_AddSingleVoterPoll(t *testing.T) {
 	assert.Equal(t, 200, rsp.StatusCode())
 
 }
-
 
 func Test_GetAllVoters(t *testing.T) {
 	var items []db.Voter
