@@ -183,19 +183,19 @@ func (vl *VoterList) DeleteAll() error {
 }
 
 // UpdateVoter updates a voter in the database
-func (t *VoterList) UpdateVoter(item ToDoItem) error {
+func (vl *VoterList) UpdateVoter(voter Voter) error {
 
 	//Before we add an item to the DB, lets make sure
 	//it does not exist, if it does, return an error
-	redisKey := redisKeyFromId(item.Id)
+	redisKey := redisKeyFromId(voter.VoterId)
 	var existingItem Voter
-	if err := t.getVoterFromRedis(redisKey, &existingItem); err != nil {
+	if err := vl.getVoterFromRedis(redisKey, &existingItem); err != nil {
 		return errors.New("voter does not exist")
 	}
 
 	//Add item to database with JSON Set.  Note there is no update
 	//functionality, so we just overwrite the existing item
-	if _, err := t.jsonHelper.JSONSet(redisKey, ".", item); err != nil {
+	if _, err := vl.jsonHelper.JSONSet(redisKey, ".", voter); err != nil {
 		return err
 	}
 
