@@ -1,4 +1,4 @@
-## Containerized Voter API Demo - With Redis Cache using Docker
+## Nicholas Dalleva - CS-T680-681 - Containerized Voter API Demo With Redis Cache using Docker
 
 From within /voter-api folder 
 
