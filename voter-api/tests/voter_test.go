@@ -36,7 +36,7 @@ func TestMain(m *testing.M) {
 }
 
 func Test_AddSingleVoter(t *testing.T) {
-	newVoter := db.Voter{
+	newVoterItem := db.VoterItem{
 		VoterId:     1,
 		Name:        "Jane Smith",
 		Email:       "jane@example.com",
@@ -44,8 +44,8 @@ func Test_AddSingleVoter(t *testing.T) {
 	}
 
 	rsp, err := cli.R().
-		SetBody(newVoter).
-		SetResult(&newVoter).
+		SetBody(newVoterItem).
+		SetResult(&newVoterItem).
 		Post(BASE_API + "/voters")
 
 	assert.Nil(t, err)
@@ -70,7 +70,7 @@ func Test_AddSingleVoterPoll(t *testing.T) {
 }
 
 func Test_GetAllVoters(t *testing.T) {
-	var items []db.Voter
+	var items []db.VoterItem
 
 	rsp, err := cli.R().SetResult(&items).Get(BASE_API + "/voters")
 
@@ -81,16 +81,16 @@ func Test_GetAllVoters(t *testing.T) {
 }
 
 func Test_GetSingleVoter(t *testing.T) {
-	var voter db.Voter
+	var voterItem db.VoterItem
 
-	rsp, err := cli.R().SetResult(&voter).Get(BASE_API + "/voters/1")
+	rsp, err := cli.R().SetResult(&voterItem).Get(BASE_API + "/voters/1")
 
 	assert.Nil(t, err)
 	assert.Equal(t, 200, rsp.StatusCode())
 
-	assert.Equal(t, 1, voter.VoterId)
-	assert.Equal(t, "Jane Smith", voter.Name)
-	assert.Equal(t, "jane@example.com", voter.Email)
+	assert.Equal(t, 1, voterItem.VoterId)
+	assert.Equal(t, "Jane Smith", voterItem.Name)
+	assert.Equal(t, "jane@example.com", voterItem.Email)
 }
 
 func Test_GetVoterPolls(t *testing.T) {

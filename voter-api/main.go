@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/adllev/voter-api/api"
+	"github.com/adllev/Voter-Container/voter-api/api"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/recover"

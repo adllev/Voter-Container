@@ -11,11 +11,11 @@ import (
 // The api package creates and maintains a reference to the data handler
 // this is a good design practice
 type VoterAPI struct {
-	db *db.VoterList
+	db *db.Voter
 }
 
 func New() (*VoterAPI, error) {
-	dbHandler, err := db.NewVoterList()
+	dbHandler, err := db.New()
 	if err != nil {
 		return nil, err
 	}
@@ -36,9 +36,9 @@ func New() (*VoterAPI, error) {
 
 // implementation for GET /todo
 // returns all todos
-func (td *VoterAPI) ListAllVoters(c *fiber.Ctx) error {
+func (va *VoterAPI) ListAllVoters(c *fiber.Ctx) error {
 
-	voterList, err := td.db.GetAllVoters()
+	voterList, err := va.db.GetAllVoters()
 	if err != nil {
 		log.Println("Error Getting All Voters: ", err)
 		return fiber.NewError(http.StatusNotFound,
@@ -49,7 +49,7 @@ func (td *VoterAPI) ListAllVoters(c *fiber.Ctx) error {
 	//so that the JSON marshalling works correctly.  We want to return
 	//an empty slice, not a nil slice. This will result in the json being []
 	if voterList == nil {
-		voterList = make([]db.Voter, 0)
+		voterList = make([]db.VoterItem, 0)
 	}
 
 	return c.JSON(voterList)
@@ -57,7 +57,7 @@ func (td *VoterAPI) ListAllVoters(c *fiber.Ctx) error {
 
 // implementation for GET /todo/:id
 // returns a single todo
-func (td *VoterAPI) GetVoter(c *fiber.Ctx) error {
+func (va *VoterAPI) GetVoter(c *fiber.Ctx) error {
 
 	//Note go is minimalistic, so we have to get the
 	//id parameter using the Param() function, and then
@@ -69,7 +69,7 @@ func (td *VoterAPI) GetVoter(c *fiber.Ctx) error {
 
 	//Note that ParseInt always returns an int64, so we have to
 	//convert it to an int before we can use it.
-	voter, err := td.db.GetVoter(id)
+	voter, err := va.db.GetVoter(id)
 	if err != nil {
 		log.Println("Voter not found: ", err)
 		return fiber.NewError(http.StatusNotFound)
@@ -82,8 +82,8 @@ func (td *VoterAPI) GetVoter(c *fiber.Ctx) error {
 
 // implementation for POST /todo
 // adds a new todo
-func (td *VoterAPI) PostVoter(c *fiber.Ctx) error {
-	var voter db.Voter
+func (va *VoterAPI) PostVoter(c *fiber.Ctx) error {
+	var voterItem db.VoterItem
 
 	//With HTTP based APIs, a POST request will usually
 	//have a body that contains the data to be added
@@ -96,45 +96,45 @@ func (td *VoterAPI) PostVoter(c *fiber.Ctx) error {
 	//bind it to a struct for us.  It will also report an error
 	//if the body is not JSON or if the JSON does not match
 	//the struct we are binding to.
-	if err := c.BodyParser(&voter); err != nil {
+	if err := c.BodyParser(&voterItem); err != nil {
 		log.Println("Error binding JSON: ", err)
 		return fiber.NewError(http.StatusBadRequest)
 	}
 
-	if err := td.db.AddVoter(voter); err != nil {
+	if err := va.db.AddVoter(voterItem); err != nil {
 		log.Println("Error adding item: ", err)
 		return fiber.NewError(http.StatusInternalServerError)
 	}
-
-	return c.JSON(voter)
+	log.Println("Added Voter: ", voterItem)
+	return c.JSON(voterItem)
 }
 
 // implementation for PUT /todo
 // Web api standards use PUT for Updates
-func (td *VoterAPI) UpdateVoter(c *fiber.Ctx) error {
-	var voter db.Voter
-	if err := c.BodyParser(&voter); err != nil {
+func (va *VoterAPI) UpdateVoter(c *fiber.Ctx) error {
+	var voterItem db.VoterItem
+	if err := c.BodyParser(&voterItem); err != nil {
 		log.Println("Error binding JSON: ", err)
 		return fiber.NewError(http.StatusBadRequest)
 	}
 
-	if err := td.db.UpdateVoter(voter); err != nil {
+	if err := va.db.UpdateVoter(voterItem); err != nil {
 		log.Println("Error updating voter: ", err)
 		return fiber.NewError(http.StatusInternalServerError)
 	}
 
-	return c.JSON(voter)
+	return c.JSON(voterItem)
 }
 
 // implementation for DELETE /todo/:id
 // deletes a todo
-func (td *VoterAPI) DeleteVoter(c *fiber.Ctx) error {
+func (va *VoterAPI) DeleteVoter(c *fiber.Ctx) error {
 	id, err := c.ParamsInt("id")
 	if err != nil {
 		return fiber.NewError(http.StatusBadRequest)
 	}
 
-	if err := td.db.DeleteVoter(id); err != nil {
+	if err := va.db.DeleteVoter(id); err != nil {
 		log.Println("Error deleting voter: ", err)
 		return fiber.NewError(http.StatusInternalServerError)
 	}
@@ -144,10 +144,10 @@ func (td *VoterAPI) DeleteVoter(c *fiber.Ctx) error {
 
 // implementation for DELETE /todo
 // deletes all todos
-func (td *VoterAPI) DeleteAllVoters(c *fiber.Ctx) error {
+func (va *VoterAPI) DeleteAllVoters(c *fiber.Ctx) error {
 
-	if err := td.db.DeleteAll(); err != nil {
-		log.Println("Error deleting all items: ", err)
+	if _, err := va.db.DeleteAll(); err != nil {
+		log.Println("Error deleting all voters: ", err)
 		return fiber.NewError(http.StatusInternalServerError)
 	}
 
@@ -155,15 +155,15 @@ func (td *VoterAPI) DeleteAllVoters(c *fiber.Ctx) error {
 }
 
 // implementation for GET /voters/:id/polls
-func (td *VoterAPI) GetVoterPolls(c *fiber.Ctx) error {
+func (va *VoterAPI) GetVoterPolls(c *fiber.Ctx) error {
 	id, err := c.ParamsInt("id")
 	if err != nil {
 		return fiber.NewError(http.StatusBadRequest)
 	}
 
-	voter, err := td.db.GetVoter(id)
+	voter, err := va.db.GetVoter(id)
 	if err != nil {
-		log.Println("Voter not found: ", err)
+		log.Println("Voter Poll not found: ", err)
 		return fiber.NewError(http.StatusNotFound)
 	}
 
@@ -171,7 +171,7 @@ func (td *VoterAPI) GetVoterPolls(c *fiber.Ctx) error {
 }
 
 // implementation for GET /voters/:id/polls/:pollid
-func (td *VoterAPI) GetVoterPoll(c *fiber.Ctx) error {
+func (va *VoterAPI) GetVoterPoll(c *fiber.Ctx) error {
 	voterID, err := c.ParamsInt("id")
 	if err != nil {
 		return fiber.NewError(http.StatusBadRequest)
@@ -182,7 +182,7 @@ func (td *VoterAPI) GetVoterPoll(c *fiber.Ctx) error {
 		return fiber.NewError(http.StatusBadRequest)
 	}
 
-	voter, err := td.db.GetVoter(voterID)
+	voter, err := va.db.GetVoter(voterID)
 	if err != nil {
 		log.Println("Voter not found: ", err)
 		return fiber.NewError(http.StatusNotFound)
@@ -198,7 +198,37 @@ func (td *VoterAPI) GetVoterPoll(c *fiber.Ctx) error {
 }
 
 // implementation for POST /voters/:id/polls/:pollid
-func (td *VoterAPI) PostVoterPoll(c *fiber.Ctx) error {
+func (va *VoterAPI) PostVoterPoll(c *fiber.Ctx) error {
+	voterID, err := c.ParamsInt("id")
+	if err != nil {
+		return fiber.NewError(http.StatusBadRequest)
+	}
+
+	var voterHistory db.VoterHistory
+
+	if err := c.BodyParser(&voterHistory); err != nil {
+		log.Println("Error binding JSON: ", err)
+		return fiber.NewError(http.StatusBadRequest)
+	}
+
+	voter, err := va.db.GetVoter(voterID)
+	if err != nil {
+		log.Println("Voter not found: ", err)
+		return fiber.NewError(http.StatusNotFound)
+	}
+
+	voter.VoteHistory = append(voter.VoteHistory, voterHistory)
+
+	if err := va.db.UpdateVoter(voter); err != nil {
+		log.Println("Error Adding Voter Poll: ", err)
+		return fiber.NewError(http.StatusInternalServerError)
+	}
+
+	return c.JSON(voterHistory)
+}
+
+// implementation for PUT /voters/:id/polls/:pollid
+func (va *VoterAPI) UpdateVoterPoll(c *fiber.Ctx) error {
 	voterID, err := c.ParamsInt("id")
 	if err != nil {
 		return fiber.NewError(http.StatusBadRequest)
@@ -215,25 +245,17 @@ func (td *VoterAPI) PostVoterPoll(c *fiber.Ctx) error {
 		return fiber.NewError(http.StatusBadRequest)
 	}
 
-	voter, err := td.db.GetVoter(voterID)
-	if err != nil {
-		log.Println("Voter not found: ", err)
-		return fiber.NewError(http.StatusNotFound)
-	}
-
-	voterHistory.PollId = pollID
-	voter.VoteHistory = append(voter.VoteHistory, voterHistory)
-
-	if err := td.db.UpdateVoter(voter); err != nil {
-		log.Println("Error updating voter: ", err)
+	// Call the UpdateVoterPoll method from the database handler
+	if err := va.db.UpdateVoterPoll(voterHistory, voterID, pollID); err != nil {
+		log.Println("Error updating voter poll: ", err)
 		return fiber.NewError(http.StatusInternalServerError)
 	}
 
 	return c.JSON(voterHistory)
 }
 
-// implementation for PUT /voters/:id/polls/:pollid
-func (td *VoterAPI) UpdateVoterPoll(c *fiber.Ctx) error {
+// implementation for DELETE /voters/:id/history/:pollid
+func (va *VoterAPI) DeleteVoterPoll(c *fiber.Ctx) error {
 	voterID, err := c.ParamsInt("id")
 	if err != nil {
 		return fiber.NewError(http.StatusBadRequest)
@@ -244,79 +266,19 @@ func (td *VoterAPI) UpdateVoterPoll(c *fiber.Ctx) error {
 		return fiber.NewError(http.StatusBadRequest)
 	}
 
-	var updatedHistory db.VoterHistory
-	if err := c.BodyParser(&updatedHistory); err != nil {
-		log.Println("Error binding JSON: ", err)
-		return fiber.NewError(http.StatusBadRequest)
-	}
-
-	voter, err := td.db.GetVoter(voterID)
-	if err != nil {
-		log.Println("Voter not found: ", err)
-		return fiber.NewError(http.StatusNotFound)
-	}
-
-	// Find the index of the history with the given poll ID
-	var index = -1
-	for i, history := range voter.VoteHistory {
-		if history.PollId == pollID {
-			index = i
-			break
-		}
-	}
-
-	if index == -1 {
-		return fiber.NewError(http.StatusNotFound, "Poll not found for the voter")
-	}
-
-	// Update the VoterHistory slice
-	voter.VoteHistory[index] = updatedHistory
-
-	if err := td.db.UpdateVoter(voter); err != nil {
-		log.Println("Error updating voter: ", err)
+	if err := va.db.DeleteVoterPoll(voterID, pollID); err != nil {
+		log.Println("Error deleting Voter Poll: ", err)
 		return fiber.NewError(http.StatusInternalServerError)
 	}
 
-	return c.JSON(updatedHistory)
-}
-
-// implementation for DELETE /voters/:id/polls/:pollid
-func (td *VoterAPI) DeleteVoterPoll(c *fiber.Ctx) error {
-	voterID, err := c.ParamsInt("id")
-	if err != nil {
-		return fiber.NewError(http.StatusBadRequest)
-	}
-
-	pollID, err := c.ParamsInt("pollid")
-	if err != nil {
-		return fiber.NewError(http.StatusBadRequest)
-	}
-
-	voter, err := td.db.GetVoter(voterID)
-	if err != nil {
-		log.Println("Voter not found: ", err)
-		return fiber.NewError(http.StatusNotFound)
-	}
-
-	for i, history := range voter.VoteHistory {
-		if history.PollId == pollID {
-			voter.VoteHistory = append(voter.VoteHistory[:i], voter.VoteHistory[i+1:]...)
-			if err := td.db.UpdateVoter(voter); err != nil {
-				log.Println("Error updating voter: ", err)
-				return fiber.NewError(http.StatusInternalServerError)
-			}
-			return c.Status(http.StatusOK).SendString("Delete OK")
-		}
-	}
-
-	return fiber.NewError(http.StatusNotFound)
+	return c.Status(http.StatusOK).SendString("Voter history deleted successfully")
 }
 
 // implementation of GET /voters/health. It is a good practice to build in a
 // health check for your API.  Below the results are just hard coded
 // but in a real API you can provide detailed information about the
 // health of your API with a Health Check
-func (td *VoterAPI) HealthCheck(c *fiber.Ctx) error {
+func (va *VoterAPI) HealthCheck(c *fiber.Ctx) error {
 	return c.Status(http.StatusOK).
 		JSON(fiber.Map{
 			"status":             "ok",
