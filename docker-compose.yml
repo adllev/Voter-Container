@@ -5,10 +5,10 @@ services:
       context: ./voter-api
       dockerfile: DockerFile
     ports:
-      - "8080:8080"
+      - "1080:1080"
     depends_on:
       - redis
   redis:
-    image: redis:latest
+    image: redis/redis-stack:latest
     ports:
       - "6379:6379"

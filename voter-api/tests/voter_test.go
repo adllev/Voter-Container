@@ -1,8 +1,6 @@
 package tests
 
 import (
-	"log"
-	"os"
 	"testing"
 	"time"
 
@@ -16,24 +14,6 @@ var (
 
 	cli = resty.New()
 )
-
-func TestMain(m *testing.M) {
-
-	//SETUP GOES FIRST
-	rsp, err := cli.R().Delete(BASE_API + "/voters")
-
-	if rsp.StatusCode() != 200 {
-		log.Printf("error clearing database, %v", err)
-		os.Exit(1)
-	}
-
-	code := m.Run()
-
-	//CLEANUP
-
-	//Now Exit
-	os.Exit(code)
-}
 
 func Test_AddSingleVoter(t *testing.T) {
 	newVoterItem := db.VoterItem{
